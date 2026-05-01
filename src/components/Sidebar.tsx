@@ -16,6 +16,7 @@ const NAV = [
   { href: "/mindmap", label: "Mind Map", icon: "◉" },
   { href: "/gallery", label: "Gallery", icon: "▣" },
   { href: "/search", label: "Search", icon: "◇" },
+  { href: "/insights", label: "Insights", icon: "✦" },
 ]
 
 export default function Sidebar({ user }: SidebarProps) {

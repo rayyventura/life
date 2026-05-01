@@ -62,11 +62,20 @@ export async function ensureSchema() {
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (entry_id) REFERENCES journal_entries(id)
   )`)
+  await db.execute(`CREATE TABLE IF NOT EXISTS chat_sessions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    messages TEXT NOT NULL,
+    entries_created TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  )`)
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_goals_user ON goals(user_id)`)
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_milestones_goal ON milestones(goal_id)`)
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_journal_user_date ON journal_entries(user_id, date)`)
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_photos_user ON photos(user_id)`)
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_photos_entry ON photos(entry_id)`)
+  await db.execute(`CREATE INDEX IF NOT EXISTS idx_chat_user ON chat_sessions(user_id)`)
   initialized = true
 }
 
@@ -409,4 +418,38 @@ export async function search(userId: string, query: string) {
     }),
   ])
   return { entries: entries.rows, goals: goals.rows }
+}
+
+// --- Chat Sessions ---
+export interface ChatSession {
+  id: string
+  user_id: string
+  messages: string
+  entries_created: string | null
+  created_at: string
+}
+
+export async function saveChatSession(
+  userId: string,
+  messages: Array<{ role: string; content: string }>,
+  entriesCreated?: object
+): Promise<ChatSession> {
+  await ensureSchema()
+  const id = generateId()
+  await db.execute({
+    sql: `INSERT INTO chat_sessions (id, user_id, messages, entries_created) VALUES (?, ?, ?, ?)`,
+    args: [id, userId, JSON.stringify(messages), entriesCreated ? JSON.stringify(entriesCreated) : null],
+  })
+  const result = await db.execute({ sql: `SELECT * FROM chat_sessions WHERE id = ?`, args: [id] })
+  return result.rows[0] as unknown as ChatSession
+}
+
+export async function getChatSessions(userId: string, limit = 30): Promise<ChatSession[]> {
+  await ensureSchema()
+  const result = await db.execute({
+    sql: `SELECT * FROM chat_sessions WHERE user_id = ? ORDER BY created_at DESC LIMIT ?`,
+    args: [userId, limit],
+  })
+  return result.rows as unknown as ChatSession[]
+}
 }
