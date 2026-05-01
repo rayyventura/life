@@ -1,0 +1,117 @@
+.root {
+  background: var(--ink-soft);
+  border: 1px solid var(--ink-border);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+  position: relative;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.monthTitle {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--bone);
+}
+
+.year {
+  color: var(--bone-dim);
+  font-style: normal;
+}
+
+.navBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--ink-border);
+  border-radius: var(--r-sm);
+  color: var(--bone-dim);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: var(--t);
+}
+
+.navBtn:hover { color: var(--bone); border-color: var(--bone-dim); }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--bone-dim);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding-bottom: 0.75rem;
+}
+
+.day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--bone-dim);
+  font-size: 0.82rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: var(--t);
+  position: relative;
+}
+
+.day:hover:not(:disabled) {
+  background: var(--ink-muted);
+  color: var(--bone);
+  border-color: var(--ink-border);
+}
+
+.day.future { opacity: 0.3; cursor: default; }
+
+.day.today {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+  font-weight: 500;
+}
+
+.day.hasEntry {
+  color: var(--bone-muted);
+  background: var(--ink-muted);
+}
+
+.day.hasEntry:hover { background: var(--ink-hover); }
+
+.dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gold);
+  display: block;
+}
+
+.loadingBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+  animation: slide-up 1s ease infinite;
+}

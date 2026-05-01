@@ -1,0 +1,111 @@
+.grid {
+  columns: 4;
+  column-gap: 0.75rem;
+}
+
+.item {
+  break-inside: avoid;
+  margin-bottom: 0.75rem;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  animation: slide-up 0.3s var(--ease-out) both;
+}
+
+.imgWrap {
+  position: relative;
+  width: 100%;
+  padding-bottom: 75%;
+  background: var(--ink-muted);
+  overflow: hidden;
+}
+
+.imgWrap img { transition: transform 0.4s var(--ease) !important; }
+.item:hover .imgWrap img { transform: scale(1.04); }
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.25rem;
+  transition: background 0.2s ease;
+}
+
+.item:hover .overlay { background: rgba(0, 0, 0, 0.35); }
+
+.viewIcon {
+  font-size: 1.2rem;
+  color: var(--bone);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.2s ease;
+}
+
+.item:hover .viewIcon { opacity: 1; transform: translateY(0); }
+
+.overlayDate {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--bone-muted);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.item:hover .overlayDate { opacity: 1; }
+
+/* Lightbox */
+.lightbox {
+  background: var(--ink-soft);
+  border: 1px solid var(--ink-border);
+  border-radius: var(--r-xl);
+  width: min(90vw, 800px);
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  animation: slide-up 0.2s var(--ease-out) both;
+}
+
+.lightboxImg {
+  flex: 1;
+  position: relative;
+  min-height: 400px;
+  background: var(--ink);
+}
+
+.lightboxMeta {
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-top: 1px solid var(--ink-border);
+}
+
+.lightboxCaption {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--bone-muted);
+}
+
+.lightboxLink {
+  font-size: 0.8rem;
+  color: var(--gold);
+  transition: var(--t);
+}
+
+.lightboxLink:hover { color: var(--gold-bright); }
+
+.lightboxDate {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--bone-dim);
+}
+
+@media (max-width: 900px) { .grid { columns: 3; } }
+@media (max-width: 600px) { .grid { columns: 2; } }
