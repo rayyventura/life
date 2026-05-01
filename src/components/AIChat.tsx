@@ -6,13 +6,47 @@ import styles from "./AIChat.module.css"
 interface Message {
   role: "user" | "assistant"
   content: string
-  created?: { journal?: { date: string; title: string }; goalNotes?: string[] }
+  created?: {
+    journal?: { date: string; title: string }
+    goalNotes?: string[]
+    relationshipEntries?: Array<{ person: string; note: string }>
+  }
+}
+
+interface ISpeechRecognitionResult {
+  readonly length: number
+  readonly isFinal: boolean
+  item(index: number): { transcript: string; confidence: number }
+  [index: number]: { transcript: string; confidence: number }
+}
+
+interface ISpeechRecognitionResultList {
+  readonly length: number
+  item(index: number): ISpeechRecognitionResult
+  [index: number]: ISpeechRecognitionResult
+}
+
+interface ISpeechRecognitionEvent extends Event {
+  readonly resultIndex: number
+  readonly results: ISpeechRecognitionResultList
+}
+
+interface ISpeechRecognition extends EventTarget {
+  continuous: boolean
+  interimResults: boolean
+  lang: string
+  start(): void
+  stop(): void
+  onstart: ((this: ISpeechRecognition, ev: Event) => void) | null
+  onend: ((this: ISpeechRecognition, ev: Event) => void) | null
+  onerror: ((this: ISpeechRecognition, ev: Event) => void) | null
+  onresult: ((this: ISpeechRecognition, ev: ISpeechRecognitionEvent) => void) | null
 }
 
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition
-    webkitSpeechRecognition: typeof SpeechRecognition
+    SpeechRecognition: new () => ISpeechRecognition
+    webkitSpeechRecognition: new () => ISpeechRecognition
   }
 }
 
@@ -26,7 +60,7 @@ export default function AIChat({ userName }: { userName: string }) {
   const [expanded, setExpanded] = useState(false)
 
   const bottomRef = useRef<HTMLDivElement>(null)
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const recognitionRef = useRef<ISpeechRecognition | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -80,8 +114,8 @@ export default function AIChat({ userName }: { userName: string }) {
 
     recognition.onstart = () => setIsListening(true)
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = Array.from(event.results)
+    recognition.onresult = (event: ISpeechRecognitionEvent) => {
+      const transcript = Array.from({ length: event.results.length }, (_, i) => event.results.item(i))
         .map((r) => r[0].transcript)
         .join("")
       setLiveTranscript(transcript)
@@ -163,6 +197,12 @@ export default function AIChat({ userName }: { userName: string }) {
                   <div key={j} className={styles.createdCard}>
                     <span className={styles.createdIcon}>◎</span>
                     <span>{note}</span>
+                  </div>
+                ))}
+                {msg.created?.relationshipEntries?.map((rel, j) => (
+                  <div key={j} className={styles.createdCard}>
+                    <span className={styles.createdIcon}>◈</span>
+                    <span>Relationship note — <em>{rel.person}</em>: {rel.note}</span>
                   </div>
                 ))}
               </div>

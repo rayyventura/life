@@ -1,5 +1,5 @@
 import { auth } from "@/auth"
-import { getChatSessions, getJournalEntries } from "@/lib/db"
+import { getChatSessions, getJournalEntries, getRelationshipEntries } from "@/lib/db"
 import { formatDate, parseTags, moodEmoji } from "@/lib/utils"
 import styles from "./insights.module.css"
 
@@ -7,9 +7,10 @@ export default async function InsightsPage() {
   const session = await auth()
   const userId = session!.user.id
 
-  const [sessions, entries] = await Promise.all([
+  const [sessions, entries, relationships] = await Promise.all([
     getChatSessions(userId, 50),
     getJournalEntries(userId, { limit: 50 }),
+    getRelationshipEntries(userId, 50),
   ])
 
   return (
@@ -54,6 +55,29 @@ export default async function InsightsPage() {
           </div>
         )}
       </section>
+
+      {/* Relationship entries */}
+      {relationships.length > 0 && (
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Relationships</h2>
+          <div className={styles.timeline}>
+            {relationships.map((rel) => (
+              <article key={rel.id} className={`${styles.entry} ${styles.relEntry}`}>
+                <div className={styles.entryMeta}>
+                  <span className={styles.entryDate}>{formatDate(rel.date)}</span>
+                  <span
+                    className={styles.sentimentDot}
+                    data-sentiment={rel.sentiment ?? "neutral"}
+                    title={rel.sentiment ?? "neutral"}
+                  />
+                  <span className={styles.relPerson}>{rel.person}</span>
+                </div>
+                <p className={styles.entryBody}>{rel.note}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* AI Chat sessions */}
       {sessions.length > 0 && (

@@ -70,6 +70,8 @@
 
 .chatEntry::before { background: var(--sage-dim); }
 
+.relEntry::before { background: #c48282; opacity: 0.6; }
+
 .entryMeta {
   display: flex;
   align-items: center;
@@ -173,23 +175,27 @@
   color: var(--sage);
 }
 
+.relPerson {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #c48282;
+  letter-spacing: 0.04em;
+}
+
+.sentimentDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sentimentDot[data-sentiment="positive"] { background: var(--sage); }
+.sentimentDot[data-sentiment="neutral"]  { background: var(--bone-dim); }
+.sentimentDot[data-sentiment="difficult"] { background: #c48282; }
+
 /* Print styles */
 @media print {
-  :root {
-    --ink: #fff;
-    --ink-soft: #fff;
-    --ink-muted: #f5f5f5;
-    --ink-border: #ddd;
-    --bone: #1a1a1a;
-    --bone-muted: #333;
-    --bone-dim: #777;
-    --gold: #8a6840;
-    --gold-dim: #8a6840;
-    --sage: #3d6647;
-  }
-
-  body::before, body::after { display: none; }
-
   .topBar .printBtn { display: none; }
 
   .root {

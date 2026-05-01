@@ -1,7 +1,7 @@
 import { auth } from "@/auth"
 import { NextResponse } from "next/server"
 import Groq from "groq-sdk"
-import { getGoals, upsertJournalEntry, createMilestone, saveChatSession, getMilestones } from "@/lib/db"
+import { getGoals, upsertJournalEntry, createMilestone, saveChatSession, getMilestones, createRelationshipEntry } from "@/lib/db"
 import { todayISO, categoryLabel, stringifyTags } from "@/lib/utils"
 
 export const dynamic = "force-dynamic"
@@ -22,6 +22,11 @@ interface AIResponse {
   goalUpdates?: Array<{
     category: string
     note: string
+  }>
+  relationshipNotes?: Array<{
+    person: string
+    note: string
+    sentiment: "positive" | "neutral" | "difficult"
   }>
 }
 
@@ -58,11 +63,19 @@ ALWAYS respond with valid JSON in this exact shape:
       "category": "career|health|finance|relationships|growth|learning|creative",
       "note": "Specific progress note for this goal category"
     }
+  ],
+  "relationshipNotes": [
+    {
+      "person": "Name of the person mentioned",
+      "note": "A brief, meaningful note about the interaction or relationship dynamic",
+      "sentiment": "positive|neutral|difficult"
+    }
   ]
 }
 
-If shouldSave is false (e.g., user just said "hi"), omit journal and goalUpdates.
+If shouldSave is false (e.g., user just said "hi"), omit journal, goalUpdates, and relationshipNotes.
 goalUpdates should only include categories actually mentioned in the conversation.
+relationshipNotes should capture any people the user mentions — friends, family, colleagues, partners — and note the interaction, how things are going, or what was shared. Include these even if the user has no active relationships goal.
 The journal body should weave together everything the user has shared — make it worth re-reading years from now.`
 }
 
@@ -100,8 +113,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "AI service unavailable" }, { status: 502 })
   }
 
-  const created: { journal?: { date: string; title: string }; goalNotes: string[] } = {
+  const created: {
+    journal?: { date: string; title: string }
+    goalNotes: string[]
+    relationshipEntries: Array<{ person: string; note: string }>
+  } = {
     goalNotes: [],
+    relationshipEntries: [],
   }
 
   // Auto-create entries if AI says we have enough
@@ -136,6 +154,24 @@ export async function POST(req: Request) {
           } catch (e) {
             console.error("Failed to save goal note:", e)
           }
+        }
+      }
+    }
+
+    // Save relationship notes
+    if (aiData.relationshipNotes?.length) {
+      for (const rel of aiData.relationshipNotes) {
+        try {
+          await createRelationshipEntry(userId, {
+            date: today,
+            person: rel.person,
+            note: rel.note,
+            sentiment: rel.sentiment,
+            source: "chat",
+          })
+          created.relationshipEntries.push({ person: rel.person, note: rel.note })
+        } catch (e) {
+          console.error("Failed to save relationship entry:", e)
         }
       }
     }

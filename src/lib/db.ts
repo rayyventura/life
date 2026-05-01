@@ -76,6 +76,18 @@ export async function ensureSchema() {
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_photos_user ON photos(user_id)`)
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_photos_entry ON photos(entry_id)`)
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_chat_user ON chat_sessions(user_id)`)
+  await db.execute(`CREATE TABLE IF NOT EXISTS relationship_entries (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    date TEXT NOT NULL,
+    person TEXT NOT NULL,
+    note TEXT NOT NULL,
+    sentiment TEXT,
+    source TEXT DEFAULT 'manual',
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  )`)
+  await db.execute(`CREATE INDEX IF NOT EXISTS idx_rel_user_date ON relationship_entries(user_id, date)`)
   initialized = true
 }
 
@@ -452,4 +464,38 @@ export async function getChatSessions(userId: string, limit = 30): Promise<ChatS
   })
   return result.rows as unknown as ChatSession[]
 }
+
+// --- Relationship Entries ---
+export interface RelationshipEntry {
+  id: string
+  user_id: string
+  date: string
+  person: string
+  note: string
+  sentiment: string | null
+  source: string
+  created_at: string
+}
+
+export async function createRelationshipEntry(
+  userId: string,
+  data: { date: string; person: string; note: string; sentiment?: string; source?: string }
+): Promise<RelationshipEntry> {
+  await ensureSchema()
+  const id = generateId()
+  await db.execute({
+    sql: `INSERT INTO relationship_entries (id, user_id, date, person, note, sentiment, source) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    args: [id, userId, data.date, data.person, data.note, data.sentiment ?? null, data.source ?? "manual"],
+  })
+  const result = await db.execute({ sql: `SELECT * FROM relationship_entries WHERE id = ?`, args: [id] })
+  return result.rows[0] as unknown as RelationshipEntry
+}
+
+export async function getRelationshipEntries(userId: string, limit = 50): Promise<RelationshipEntry[]> {
+  await ensureSchema()
+  const result = await db.execute({
+    sql: `SELECT * FROM relationship_entries WHERE user_id = ? ORDER BY date DESC LIMIT ?`,
+    args: [userId, limit],
+  })
+  return result.rows as unknown as RelationshipEntry[]
 }
