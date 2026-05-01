@@ -1,4 +1,4 @@
-import { createClient } from "@libsql/client"
+import { createClient, type InValue } from "@libsql/client"
 import { generateId } from "./utils"
 
 const db = createClient({
@@ -140,7 +140,7 @@ export async function updateGoal(
     .filter(([, v]) => v !== undefined)
     .map(([k]) => `${k} = ?`)
     .join(", ")
-  const values = Object.values(data).filter((v) => v !== undefined)
+  const values = Object.values(data).filter((v): v is string => v !== undefined)
   if (!fields) return
   await db.execute({
     sql: `UPDATE goals SET ${fields}, updated_at = datetime('now') WHERE id = ? AND user_id = ?`,
@@ -233,7 +233,7 @@ export async function getJournalEntries(
 ): Promise<JournalEntry[]> {
   await ensureSchema()
   let sql = `SELECT * FROM journal_entries WHERE user_id = ?`
-  const args: unknown[] = [userId]
+  const args: InValue[] = [userId]
   if (options?.mood) { sql += ` AND mood = ?`; args.push(options.mood) }
   sql += ` ORDER BY date DESC`
   if (options?.limit) { sql += ` LIMIT ?`; args.push(options.limit) }
